@@ -115,12 +115,12 @@ function Compare-ObjectRecursive {
             $ReferenceObject -eq $DifferenceObject
         } elseif ($ReferenceObject -ne $DifferenceObject) {
             [PSCustomObject]@{
-                'InputObject'   = $ReferenceObject
-                'SideIndicator' = '<='
-            }
-            [PSCustomObject]@{
                 'InputObject'   = $DifferenceObject
                 'SideIndicator' = '=>'
+            }
+            [PSCustomObject]@{
+                'InputObject'   = $ReferenceObject
+                'SideIndicator' = '<='
             }
         }
         return
@@ -130,12 +130,12 @@ function Compare-ObjectRecursive {
             "$ReferenceObject" -eq "$DifferenceObject"
         } elseif ("$ReferenceObject" -ne "$DifferenceObject") {
             [PSCustomObject]@{
-                'InputObject'   = $ReferenceObject
-                'SideIndicator' = '<='
-            }
-            [PSCustomObject]@{
                 'InputObject'   = $DifferenceObject
                 'SideIndicator' = '=>'
+            }
+            [PSCustomObject]@{
+                'InputObject'   = $ReferenceObject
+                'SideIndicator' = '<='
             }
         }
         return
@@ -160,12 +160,12 @@ function Compare-ObjectRecursive {
             $BothAreSomeTypeOfNull
         } elseif (!$BothAreSomeTypeOfNull) {
             [PSCustomObject]@{
-                'InputObject'   = $ReferenceObject
-                'SideIndicator' = '<='
-            }
-            [PSCustomObject]@{
                 'InputObject'   = $DifferenceObject
                 'SideIndicator' = '=>'
+            }
+            [PSCustomObject]@{
+                'InputObject'   = $ReferenceObject
+                'SideIndicator' = '<='
             }
         }
         return
@@ -175,12 +175,12 @@ function Compare-ObjectRecursive {
             $ReferenceObject -eq $DifferenceObject
         } elseif ($ReferenceObject -ne $DifferenceObject) {
             [PSCustomObject]@{
-                'InputObject'   = $ReferenceObject
-                'SideIndicator' = '<='
-            }
-            [PSCustomObject]@{
                 'InputObject'   = $DifferenceObject
                 'SideIndicator' = '=>'
+            }
+            [PSCustomObject]@{
+                'InputObject'   = $ReferenceObject
+                'SideIndicator' = '<='
             }
         }
         return
@@ -190,12 +190,12 @@ function Compare-ObjectRecursive {
             $false
         } else {
             [PSCustomObject]@{
-                'InputObject'   = $ReferenceObject
-                'SideIndicator' = '<='
-            }
-            [PSCustomObject]@{
                 'InputObject'   = $DifferenceObject
                 'SideIndicator' = '=>'
+            }
+            [PSCustomObject]@{
+                'InputObject'   = $ReferenceObject
+                'SideIndicator' = '<='
             }
         }
         return
@@ -222,15 +222,15 @@ function Compare-ObjectRecursive {
             $false
             return
         }
-        [PSCustomObject]@{
-            'InputObject'   = $ReferenceObject
-            'SideIndicator' = '<='
-        }
         foreach ($Value in $DifferenceObject) {
             [PSCustomObject]@{
                 'InputObject'   = $Value
                 'SideIndicator' = '=>'
             }
+        }
+        [PSCustomObject]@{
+            'InputObject'   = $ReferenceObject
+            'SideIndicator' = '<='
         }
         return
     } elseif ($ReferenceObject -is [array] -and $DifferenceObject -is [array]) {
@@ -337,12 +337,8 @@ function Compare-ObjectRecursive {
         $Properties += $Prop
     }
     #Write-Verbose "Compare-ObjectRecursive: properties are $( $Properties -join '; ')"
-    $OutputRight = [PSCustomObject]@{
-        'SideIndicator' = '=>'
-    }
-    $OutputLeft = [PSCustomObject]@{
-        'SideIndicator' = '<='
-    }
+    $OutputRight = [PSCustomObject]::New()
+    $OutputLeft = [PSCustomObject]::New()
     $ObjectsAreTheSame = $true
     foreach ($Property in $Properties) {
         $Value1 = $ReferenceObject.$Property
@@ -363,8 +359,8 @@ function Compare-ObjectRecursive {
                 $Result = Compare-ObjectRecursive -ReferenceObject $Value1 -DifferenceObject $Value2 @RecursiveParams
                 if ($null -ne $Result) {
                     $ObjectsAreTheSame = $false
-                    $PropertyOutputRight = $Result | Where-Object -Property 'SideIndicator' -EQ '=>'
-                    $PropertyOutputLeft = $Result | Where-Object -Property 'SideIndicator' -EQ '<='
+                    $PropertyOutputRight = ($Result | Where-Object -Property 'SideIndicator' -EQ '=>').InputObject
+                    $PropertyOutputLeft = ($Result | Where-Object -Property 'SideIndicator' -EQ '<=').InputObject
                 }
             }
         } elseif ($Value1 -ne $Value2) {
@@ -397,6 +393,8 @@ function Compare-ObjectRecursive {
     if ($BooleanOutput) {
         $ObjectsAreTheSame
     } elseif ($ObjectsAreTheSame -eq $false) {
+        $OutputRight | Add-Member -NotePropertyName 'SideIndicator' -NotePropertyValue '=>'
+        $OutputLeft | Add-Member -NotePropertyName 'SideIndicator' -NotePropertyValue '<='
         @(
             $OutputRight
             $OutputLeft
