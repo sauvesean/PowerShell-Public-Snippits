@@ -71,11 +71,11 @@ function Compare-ObjectRecursive {
 
         .NOTES
         ===========================================================================
-		Created with: 	Visual Studio Code
-		Created on:   	5/10/2023
-		Created by:   	Sean.Sauve
-		Filename:     	Compare-ObjectRecursive.ps1
-		===========================================================================
+        Created with: 	Visual Studio Code
+        Created on:   	5/10/2023
+        Created by:   	Sean.Sauve
+        Filename:     	Compare-ObjectRecursive.ps1
+        ===========================================================================
     #>
     [CmdletBinding()]
     param (
