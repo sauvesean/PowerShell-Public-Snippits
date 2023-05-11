@@ -80,8 +80,14 @@ function Compare-ObjectRecursive {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]
+        [AllowEmptyCollection()]
+        [AllowEmptyString()]
+        [AllowNull()]
         [object]$ReferenceObject,
         [Parameter(Mandatory)]
+        [AllowEmptyCollection()]
+        [AllowEmptyString()]
+        [AllowNull()]
         [object]$DifferenceObject,
         [switch]$BooleanOutput,
         [string[]]$IgnoreProperty,
@@ -135,9 +141,24 @@ function Compare-ObjectRecursive {
         return
     } elseif ($OneIsAStringTheOtherIsNot) {
         #Write-Debug 'Compare-ObjectRecursive: One is a string, the other is not'
+        $ReferenceIsANull = $EvaluateNullOrEmptyAsEqual -and (
+            ($ReferenceObject -is [string] -and [string]::IsNullOrEmpty($ReferenceObject)) -or
+            $null -eq $ReferenceObject -or
+            $ReferenceObject -is [DBNull] -or
+            ($ReferenceObject -is [array] -and $ReferenceObject.Count -eq 0) -or
+            ($ReferenceObject -is [array] -and ($ReferenceObject | ForEach-Object -Process { $_ -eq $null -or $_ -eq '' -or $_ -is [DBNull] }).Count -eq $ReferenceObject.Count)
+        )
+        $DifferenceIsANull = $EvaluateNullOrEmptyAsEqual -and (
+            ($ReferenceObject -is [string] -and [string]::IsNullOrEmpty($DifferenceObject)) -or
+            $null -eq $DifferenceObject -or
+            $DifferenceObject -is [DBNull] -or
+            ($DifferenceObject -is [array] -and $DifferenceObject.Count -eq 0) -or
+            ($DifferenceObject -is [array] -and ($DifferenceObject | ForEach-Object -Process { $_ -eq $null -or $_ -eq '' -or $_ -is [DBNull] }).Count -eq $DifferenceObject.Count)
+        )
+        $BothAreSomeTypeOfNull = $ReferenceIsANull -and $DifferenceIsANull
         if ($BooleanOutput) {
-            $false
-        } else {
+            $BothAreSomeTypeOfNull
+        } elseif (!$BothAreSomeTypeOfNull) {
             [PSCustomObject]@{
                 'InputObject'   = $ReferenceObject
                 'SideIndicator' = '<='
@@ -347,8 +368,22 @@ function Compare-ObjectRecursive {
                 }
             }
         } elseif ($Value1 -ne $Value2) {
-            $BothAreSomeTypeOfNull = [string]::IsNullOrEmpty($Value1) -and [string]::IsNullOrEmpty($Value2)
-            if ($EvaluateNullOrEmptyAsEqual -eq $true -and $BothAreSomeTypeOfNull -eq $false) {
+            $Value1IsANull = $EvaluateNullOrEmptyAsEqual -and (
+                ($Value1 -is [string] -and [string]::IsNullOrEmpty($Value1)) -or
+                $null -eq $Value1 -or
+                $Value1 -is [DBNull] -or
+                ($Value1 -is [array] -and $Value1.Count -eq 0) -or
+                ($Value1 -is [array] -and ($Value1 | ForEach-Object -Process { $_ -eq $null -or $_ -eq '' -or $_ -is [DBNull] }).Count -eq $Value1.Count)
+            )
+            $Value2IsANull = $EvaluateNullOrEmptyAsEqual -and (
+                ($Value2 -is [string] -and [string]::IsNullOrEmpty($Value2)) -or
+                $null -eq $Value2 -or
+                $Value2 -is [DBNull] -or
+                ($Value2 -is [array] -and $Value2.Count -eq 0) -or
+                ($Value2 -is [array] -and ($Value2 | ForEach-Object -Process { $_ -eq $null -or $_ -eq '' -or $_ -is [DBNull] }).Count -eq $Value2.Count)
+            )
+            $BothAreSomeTypeOfNull = $Value1IsANull -and $Value2IsANull
+            if ($BothAreSomeTypeOfNull -eq $false) {
                 #Write-Verbose "Compare-ObjectRecursive: Values for property $Property are different.  ReferenceObject: $Value1; DifferenceObject: $Value2"
                 $ObjectsAreTheSame = $false
                 if ($BooleanOutput) {
